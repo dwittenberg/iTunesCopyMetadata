@@ -12,12 +12,15 @@ Itunes has a binary library to save all the song names, ratings, etc. You can in
 Now, iTunes provides also an xml document which is eazy readable.
 My program streams the info from whatever iTunes-XML-file to the local real Library.
 
+
+<pre>
   ______          ______
  |      \        /      \
  |  Old  |      / current\
  |  .xml | ==> |  itunes  |
  |_______|      \________/
-
+ 
+</pre>
 
 * Make the tool find the metadata xml (paste the path to it on the first line)
 * select the song in itunes that can be affected
@@ -25,7 +28,8 @@ My program streams the info from whatever iTunes-XML-file to the local real Libr
 * to see the progres, keep ckilkking on the progressbar.
 
 
- 
+```csharp
+
 // Here is the essence how two songs are comared: (c#)
 
 // ' livingTrack (from current iTunes) '  ==  ' oldTrack (from other iTunes XML) '
@@ -35,6 +39,6 @@ if (!oldTrack.RatingComputed && oldTrack.Rating != 0)
     livingTrack.Rating = Math.Max(oldTrack.Rating, livingTrack.Rating);
 }
 
+```
 
-
-Made By Emile Sonneveld
+_Made By Emile Sonneveld_
