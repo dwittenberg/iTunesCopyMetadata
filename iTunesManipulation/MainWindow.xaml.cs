@@ -1,15 +1,9 @@
-﻿using System.IO;
-using System.Threading.Tasks;
-using System.Windows.Threading;
 using iTunesLib;
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Threading;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Input;
-using System.Xml;
 using System.Windows.Forms;
 
 namespace iTunesManipulation
@@ -43,12 +37,12 @@ namespace iTunesManipulation
         }
 
         #region new buttons
-        private async void btnReadXml_Click(object sender, RoutedEventArgs e)
+        private void btnReadXml_Click(object sender, RoutedEventArgs e)
         {
 
             EnableButtons(false);
             //await Helper.Test(cancelSource.Token, progress);
-            _sourceSonglist = await Helper.LoadItunesXML(tbXmlPath.Text, cancelSource.Token, progress);
+            _sourceSonglist =  XmlHandler.LoadItunesXML(tbXmlPath.Text);
             EnableButtons(true);
         }
 
