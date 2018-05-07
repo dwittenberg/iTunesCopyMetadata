@@ -27,7 +27,7 @@ namespace iTunesManipulation
             progress = new Progress<double>();
             progress.ProgressChanged += Progress_ProgressChanged;
             cancelSource = new CancellationTokenSource();
-            dgVisible.DataContext = _sourceSonglist;
+            DataContext = new List<SongStruct>();//_sourceSonglist;
         }
 
         private void Progress_ProgressChanged(object sender, double e)
