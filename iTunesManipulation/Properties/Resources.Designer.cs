@@ -24,7 +24,6 @@ namespace iTunesManipulation.Properties
     [global::System.Runtime.CompilerServices.CompilerGeneratedAttribute()]
     internal class Resources
     {
-
         private static global::System.Resources.ResourceManager resourceMan;
 
         private static global::System.Globalization.CultureInfo resourceCulture;
@@ -42,7 +41,7 @@ namespace iTunesManipulation.Properties
         {
             get
             {
-                if ((resourceMan == null))
+                if (object.ReferenceEquals(resourceMan, null))
                 {
                     global::System.Resources.ResourceManager temp = new global::System.Resources.ResourceManager("iTunesManipulation.Properties.Resources", typeof(Resources).Assembly);
                     resourceMan = temp;
