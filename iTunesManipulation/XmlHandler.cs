@@ -8,21 +8,22 @@ namespace iTunesManipulation
 {
     static class XmlHandler
     {
-        public static List<SongStruct> LoadItunesXML(string filePath)
+        public static Dictionary<int, SongStruct>  LoadItunesXML(string filePath)
         {
             if (!File.Exists(filePath))
             {
                 MessageBox.Show("invalid filepath: '" + filePath + "'");
-                return new List<SongStruct>();
+                return new Dictionary<int, SongStruct> ();
             }
 
-            List<SongStruct> bibliotek = new List<SongStruct>();
+            Dictionary<int, SongStruct> bibliotek = new Dictionary<int, SongStruct> ();
             NSDictionary tracks = (XmlPropertyListParser.Parse(new FileInfo(filePath)) as NSDictionary)["Tracks"] as NSDictionary;
 
             foreach (var entry in tracks)
             {
                 NSDictionary track = (NSDictionary)entry.Value;
                 SongStruct musicFile = new SongStruct();
+                int id = 0;
 
                 // Get importend informations
                 if (track.ContainsKey("Location"))
@@ -40,15 +41,18 @@ namespace iTunesManipulation
                 { musicFile.Album = track["Album"].ToString(); }
 
                 if (track.ContainsKey("Artist"))
-                { musicFile.Album = track["Artist"].ToString(); }
+                { musicFile.Artist = track["Artist"].ToString(); }
 
-                if (track.ContainsKey("AlbumA rtist"))
-                { musicFile.Album = track["Album Artist"].ToString(); }
+                if (track.ContainsKey("Album Artist"))
+                { musicFile.AlbumArtist = track["Album Artist"].ToString(); }
 
                 if (track.ContainsKey("Genre"))
                 { musicFile.Genre = track["Genre"].ToString(); }
 
                 // integer
+                if (track.ContainsKey("Track ID"))
+                { id = musicFile.ID = int.Parse(track["Track ID"].ToString()); }
+
                 if (track.ContainsKey("Track Number"))
                 { musicFile.Track = int.Parse(track["Track Number"].ToString()); }
 
@@ -56,16 +60,16 @@ namespace iTunesManipulation
                 { musicFile.Year = int.Parse(track["Year"].ToString()); }
 
                 if (track.ContainsKey("Album Rating"))
-                { musicFile.Year = int.Parse(track["Album Rating"].ToString()); }
+                { musicFile.AlbumRating = int.Parse(track["Album Rating"].ToString()); }
 
                 if (track.ContainsKey("Total Time"))
-                { musicFile.Year = int.Parse(track["Total Time"].ToString()); }
+                { musicFile.TotalTime = int.Parse(track["Total Time"].ToString()); }
 
                 if (track.ContainsKey("Bit Rate"))
-                { musicFile.Year = int.Parse(track["Bit Rate"].ToString()); }
+                { musicFile.BitRate = int.Parse(track["Bit Rate"].ToString()); }
 
                 if (track.ContainsKey("Play Count"))
-                { musicFile.Year = int.Parse(track["Play Count"].ToString()); }
+                { musicFile.PlayCount = int.Parse(track["Play Count"].ToString()); }
 
                 //// bool
                 //if (track.ContainsKey("Rating Computed"))
@@ -73,7 +77,7 @@ namespace iTunesManipulation
 
                 // ToDo: TryCatch ??
 
-                bibliotek.Add(musicFile);
+                bibliotek.Add(id, musicFile);
             }
             return bibliotek;
         }

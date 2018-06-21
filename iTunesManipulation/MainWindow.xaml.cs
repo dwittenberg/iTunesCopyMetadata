@@ -13,7 +13,7 @@ namespace iTunesManipulation
     /// </summary>
     public partial class MainWindow : Window
     {
-        private List<SongStruct> _sourceSonglist;
+        private Dictionary<int, SongStruct>  _sourceSonglist;
 
         private readonly iTunesAppClass _myiTunes = new iTunesAppClass();
         private CancellationTokenSource cancelSource;
@@ -27,7 +27,15 @@ namespace iTunesManipulation
             progress = new Progress<double>();
             progress.ProgressChanged += Progress_ProgressChanged;
             cancelSource = new CancellationTokenSource();
-            DataContext = new List<SongStruct>();//_sourceSonglist;
+            _sourceSonglist = new Dictionary<int, SongStruct> 
+            {
+                //new SongStruct { Name = "hh" },
+                //new SongStruct { Name = "ha" },
+                //new SongStruct { Name = "hhs" },
+                //new SongStruct { Name = "hhd" },
+                //new SongStruct { Name = "hhg"},
+            };
+            dgVisible.DataContext = _sourceSonglist;
         }
 
         private void Progress_ProgressChanged(object sender, double e)
@@ -42,30 +50,39 @@ namespace iTunesManipulation
 
             EnableButtons(false);
             //await Helper.Test(cancelSource.Token, progress);
-            _sourceSonglist =  XmlHandler.LoadItunesXML(tbXmlPath.Text);
+            dgVisible.DataContext = _sourceSonglist = XmlHandler.LoadItunesXML(tbXmlPath.Text);
             EnableButtons(true);
         }
 
         private async void btnReadItunesRating_Click(object sender, RoutedEventArgs e)
         {
             EnableButtons(false);
-            _sourceSonglist = await Helper.GetItunesRating(_sourceSonglist, _myiTunes, cancelSource.Token, progress);
+            dgVisible.DataContext = _sourceSonglist = await Helper.ItunesRatingSet(_sourceSonglist, _myiTunes, cancelSource.Token, progress);
             EnableButtons(true);
         }
 
         private async void btnFileRating_Click(object sender, RoutedEventArgs e)
         {
             EnableButtons(false);
-            _sourceSonglist = await Helper.GetFileRating(_sourceSonglist, cancelSource.Token, progress);
+            dgVisible.DataContext = _sourceSonglist = await Helper.GetFileRating(_sourceSonglist, cancelSource.Token, progress);
             EnableButtons(true);
         }
 
         private async void btnCompareiTunes2File_Click(object sender, RoutedEventArgs e)
         {
             EnableButtons(false);
-            _sourceSonglist = await Helper.FilterDifferenzes(_sourceSonglist, cancelSource.Token, progress);
+            dgVisible.DataContext = _sourceSonglist = await Helper.FilterDifferenzes(_sourceSonglist, cancelSource.Token, progress);
             EnableButtons(true);
         }
+
+        private async void btnToFile_Click(object sender, RoutedEventArgs e)
+        {
+            EnableButtons(false);
+            dgVisible.DataContext = _sourceSonglist = await Helper.SetFileRating(_sourceSonglist, cancelSource.Token, progress);
+            EnableButtons(true);
+        }
+
+
 
         private void btnCancel_Click(object sender, RoutedEventArgs e)
         {
@@ -99,6 +116,13 @@ namespace iTunesManipulation
                 // Assign the cursor in the Stream to the Form's Cursor property.  
                 tbXmlPath.Text = openFileDialog1.FileName;
             }
+        }
+
+        private void btnEasyMode_Click(object sender, RoutedEventArgs e)
+        {
+            SimpleView sv = new SimpleView();
+            sv.Show();
+            this.Close();
         }
     }
 }

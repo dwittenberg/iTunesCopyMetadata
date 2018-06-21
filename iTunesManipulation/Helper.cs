@@ -18,11 +18,8 @@ namespace iTunesManipulation
         /// Load FIleInfos from XML - without Rating
         /// </summary>
         /// <returns></returns>
-        
-
-        public static async Task<List<SongStruct>> GetFileRating(List<SongStruct> givenList, CancellationToken ctx, IProgress<double> progress)
+        public static async Task<Dictionary<int, SongStruct> > GetFileRating(Dictionary<int, SongStruct>  givenList, CancellationToken ctx, IProgress<double> progress)
         {
-            List<SongStruct> listOfDifferences = new List<SongStruct>();
             await Task.Run(() =>
             {
                 for (int i = 0; i < givenList.Count; i++)
@@ -35,12 +32,86 @@ namespace iTunesManipulation
                 }
             }, ctx);
 
-            return listOfDifferences;
+            return givenList;
         }
 
-        public static async Task<List<SongStruct>> GetItunesRating(List<SongStruct> givenList, iTunesAppClass _myiTunes, CancellationToken ctx, IProgress<double> progress)
+        public static async Task<Dictionary<int, SongStruct> > SetFileRating(Dictionary<int, SongStruct>  givenList, CancellationToken ctx, IProgress<double> progress)
         {
-            List<SongStruct> listOfDifferences = new List<SongStruct>();
+            await Task.Run(() =>
+            {
+                for (int i = 0; i < givenList.Count; i++)
+                {
+                    if (ctx.IsCancellationRequested)
+                        break;
+
+                    if (RatingWriteFile(new FileInfo(givenList[i].Location), givenList[i].RatingiTunes))
+                        givenList[i].RatingFile = givenList[i].RatingiTunes;
+
+                    Report(progress, i, givenList.Count);
+                }
+            }, ctx);
+
+            return givenList;
+        }
+
+        public static Dictionary<int, SongStruct>  ItunesGetInformation(iTunesAppClass _myiTunes)
+        {
+            Dictionary<int, SongStruct>  fileList = new Dictionary<int, SongStruct> ();
+
+            foreach (IITTrack track in _myiTunes.LibraryPlaylist.Tracks)
+            {
+                fileList.Add(new SongStruct
+                {
+                    Name = track.Name,
+                    Track = track.trackID,
+                    Album = track.Album,
+                    //Location = track.,
+                    Artist = track.Artist,
+                    RatingiTunes = track.Rating,
+                });
+            }
+
+            return fileList;
+        }
+
+        public static async Task<Dictionary<int, SongStruct> > ItunesRatingGet(Dictionary<int, SongStruct>  givenList, iTunesAppClass _myiTunes, CancellationToken ctx, IProgress<double> progress)
+        {
+            Dictionary<int, SongStruct>  listOfDifferences = new Dictionary<int, SongStruct> ();
+            await Task.Run(() =>
+            {
+                //foreach (IITTrack item in _myiTunes.LibraryPlaylist.Tracks)
+                //{
+                //    var c = item.Rating;
+                //}
+
+                for (int i = 0; i < givenList.Count; i++)
+                {
+                    if (ctx.IsCancellationRequested)
+                        break;
+
+                    //IITTrack a =  _myiTunes.LibraryPlaylist.Tracks.ItemByName[givenList[i].Name] as IITTrack;
+
+                    var tracks = _myiTunes.LibraryPlaylist.Search(givenList[i].Name, ITPlaylistSearchField.ITPlaylistSearchFieldSongNames);
+
+                    foreach (IITTrack track in tracks)
+                    {
+                        if (track.TrackDatabaseID == givenList[i].ID)
+                        {
+                            givenList[i].RatingiTunes = track.Rating.ItunesRatingTo5();
+                            break;
+                        }
+                    }
+                    
+                    Report(progress, i, givenList.Count);
+                }
+            }, ctx);
+
+            return givenList;
+        }
+
+        public static async Task<Dictionary<int, SongStruct> > ItunesRatingSet(Dictionary<int, SongStruct>  givenList, iTunesAppClass _myiTunes, CancellationToken ctx, IProgress<double> progress)
+        {
+            Dictionary<int, SongStruct>  listOfDifferences = new Dictionary<int, SongStruct> ();
             await Task.Run(() =>
             {
                 for (int i = 0; i < givenList.Count; i++)
@@ -49,8 +120,18 @@ namespace iTunesManipulation
                         break;
 
                     // ToDo: Testen mit kleiner Bibliotek
-                    var a = _myiTunes.LibraryPlaylist.Tracks.ItemByName[givenList[i].Name] as IITTrack;
-                    givenList[i].RatingiTunes = a.Rating.ItunesRatingTo5();
+                    var tracks = _myiTunes.LibraryPlaylist.Search(givenList[i].Name, ITPlaylistSearchField.ITPlaylistSearchFieldSongNames);
+
+                    foreach (IITTrack track in tracks)
+                    {
+                        if (track.TrackDatabaseID == givenList[i].ID)
+                        {
+                            track.Rating = givenList[i].RatingFile.ToItunesRating();
+                            givenList[i].RatingiTunes = track.Rating.ItunesRatingTo5();
+                            break;
+                        }
+                    }
+
                     Report(progress, i, givenList.Count);
                 }
             }, ctx);
@@ -58,36 +139,19 @@ namespace iTunesManipulation
             return givenList;
         }
 
-        public static async Task<List<SongStruct>> FilterDifferenzes(List<SongStruct> givenList, CancellationToken ctx, IProgress<double> progress)
+        public static async Task<Dictionary<int, SongStruct> > FilterDifferenzes(Dictionary<int, SongStruct>  givenList, CancellationToken ctx, IProgress<double> progress)
         {
-            List<SongStruct> listOfDifferences = new List<SongStruct>();
+            Dictionary<int, SongStruct>  listOfDifferences = new Dictionary<int, SongStruct> ();
             //ConcurrentBag<SongStruct> bagOfDifferences = new ConcurrentBag<SongStruct>();
 
             await Task.Run(() =>
             {
-                //givenList.AsParallel().ForAll(song =>
-                //{
-                //    if (ctx.IsCancellationRequested)
-                //        return;
-
-                //    if ((song.RatingiTunes == 0 &&
-                //        song.RatingFile != 0) |
-                //        song.RatingFile != song.RatingiTunes)
-                //    {
-                //        bagOfDifferences.Add(song);
-                //    }
-
-                //    progress.Report(1);
-                //});
                 for (int i = 0; i < givenList.Count; i++)
                 {
-
                     if (ctx.IsCancellationRequested)
                         break;
 
-                    if ((givenList[i].RatingiTunes == 0 &&
-                        givenList[i].RatingFile != 0) |
-                        givenList[i].RatingFile != givenList[i].RatingiTunes)
+                    if (givenList[i].RatingFile != givenList[i].RatingiTunes)
                     {
                         listOfDifferences.Add(givenList[i]);
                     }
@@ -100,32 +164,20 @@ namespace iTunesManipulation
         }
 
         #region read/write file rating
-        public static int RatingReadFile(string location)
+        private static int RatingReadFile(string location)
         {
+            if (!File.Exists(location))
+                return 0;
+
             ShellFile so = ShellFile.FromFilePath(location);
 
-            if (!compitableMusicTypes.Contains<string>(location.Split('.').Last()) | so.Properties.System.Rating.Value == null)
+            if (!compitableMusicTypes.Contains<string>("." + location.Split('.').Last()) || so.Properties.System.Rating.Value == null)
             { return 0; }
 
             return so.Properties.System.Rating.Value.FileRatingTo5();
         }
 
-        public static async Task<bool> Test(CancellationToken ctx, IProgress<double> progress)
-        {
-
-            for (int i = 0; i < 100; i++)
-            {
-                if (ctx.IsCancellationRequested)
-                    break;
-                await Task.Delay(25);
-                Report(progress, i, 100);
-            }
-
-            return true;
-        }
-
-
-        public static bool RatingWrite(FileInfo file, int rating)
+        private static bool RatingWriteFile(FileInfo file, int rating)
         {
             try
             {
@@ -134,14 +186,18 @@ namespace iTunesManipulation
                 if (!compitableMusicTypes.Contains<string>(file.Extension))
                     return false;
 
+                if (!file.Exists)
+                    return false;
+
                 so.Properties.System.Rating.Value = rating.ToFileRating();
-                return true;
+                return (so.Properties.System.Rating.Value == null && rating != 0) ? false : true;
             }
             catch (Exception ex)
             {
                 return false;
             }
         }
+
         private static void Report(IProgress<double> progress, int value, int max)
         {
             progress.Report((value * 100.0) / max);

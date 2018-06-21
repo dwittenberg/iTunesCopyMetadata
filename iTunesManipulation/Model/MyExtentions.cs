@@ -26,7 +26,7 @@ namespace iTunesManipulation
             switch (rating)
             {
                 case 0:
-                    return 0;
+                    return null;
                 case 1:
                     return 1;
                 case 2:

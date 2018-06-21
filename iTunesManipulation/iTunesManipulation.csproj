@@ -80,9 +80,16 @@
       <SubType>Designer</SubType>
     </ApplicationDefinition>
     <Compile Include="Helper.cs" />
+    <Compile Include="SimpleView.xaml.cs">
+      <DependentUpon>SimpleView.xaml</DependentUpon>
+    </Compile>
     <Compile Include="Model\MyExtentions.cs" />
     <Compile Include="Model\SongStruct.cs" />
     <Compile Include="XmlHandler.cs" />
+    <Page Include="SimpleView.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
     <Page Include="MainWindow.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
