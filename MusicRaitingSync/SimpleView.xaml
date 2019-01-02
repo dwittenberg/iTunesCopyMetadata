@@ -1,7 +1,7 @@
 ﻿<Window
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        xmlns:local="clr-namespace:iTunesManipulation" x:Class="iTunesManipulation.SimpleView"
+        xmlns:local="clr-namespace:MusicRaitingSync" x:Class="MusicRaitingSync.SimpleView"
         Title="SimpleView" Height="461.078" Width="637.935">
 
     <Grid Margin="0,0,-6.667,0">

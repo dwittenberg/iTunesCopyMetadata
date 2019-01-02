@@ -1,5 +1,5 @@
 ﻿
-namespace iTunesManipulation
+namespace MusicRaitingSync
 {
     public class SongStruct
     {

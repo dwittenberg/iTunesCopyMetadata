@@ -7,7 +7,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using System.Windows;
 
-namespace iTunesManipulation
+namespace MusicRaitingSync
 {
     /// <summary>
     /// Interaction logic for App.xaml

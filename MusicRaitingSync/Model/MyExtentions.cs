@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace iTunesManipulation
+namespace MusicRaitingSync
 {
     public static class MyExtentions
     {

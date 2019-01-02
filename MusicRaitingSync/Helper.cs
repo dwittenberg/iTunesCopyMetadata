@@ -7,7 +7,7 @@ using Microsoft.WindowsAPICodePack.Shell;
 using iTunesLib;
 using System.Threading;
 
-namespace iTunesManipulation
+namespace MusicRaitingSync
 {
     public class Helper
     {
@@ -60,7 +60,7 @@ namespace iTunesManipulation
 
             foreach (IITTrack track in _myiTunes.LibraryPlaylist.Tracks)
             {
-                fileList.Add(new SongStruct
+                fileList.Add(track.trackID, new SongStruct
                 {
                     Name = track.Name,
                     Track = track.trackID,
@@ -68,6 +68,7 @@ namespace iTunesManipulation
                     //Location = track.,
                     Artist = track.Artist,
                     RatingiTunes = track.Rating,
+                    ID = track.trackID,
                 });
             }
 
@@ -153,7 +154,7 @@ namespace iTunesManipulation
 
                     if (givenList[i].RatingFile != givenList[i].RatingiTunes)
                     {
-                        listOfDifferences.Add(givenList[i]);
+                        listOfDifferences.Add(givenList[i].ID, givenList[i]);
                     }
 
                     Report(progress, i, givenList.Count);

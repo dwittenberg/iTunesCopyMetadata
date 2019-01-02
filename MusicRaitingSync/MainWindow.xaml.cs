@@ -6,7 +6,7 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Forms;
 
-namespace iTunesManipulation
+namespace MusicRaitingSync
 {
     /// <summary>
     /// Interaction logic for MainWindow.xaml
