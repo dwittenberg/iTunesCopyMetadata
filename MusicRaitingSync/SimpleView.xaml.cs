@@ -13,14 +13,14 @@ namespace MusicRaitingSync
     /// </summary>
     public partial class SimpleView : Window
     {
-        private Dictionary<int, SongStruct>  _sourceSonglistFull;
-        private Dictionary<int, SongStruct>  _sourceSonglistLight;
+        private Dictionary<int, SongStructS> _sourceSonglistFull;
+        private Dictionary<int, SongStructS> _sourceSonglistLight;
 
         private readonly iTunesAppClass _myiTunes = new iTunesAppClass();
         private CancellationTokenSource cancelSource;
         private Progress<double> progress;
+        private string _xmlPath = string.Empty;
 
-        // ToDo Caching der iTunes und File Daten
         public SimpleView()
         {
             InitializeComponent();
@@ -28,36 +28,40 @@ namespace MusicRaitingSync
             progress = new Progress<double>();
             progress.ProgressChanged += Progress_ProgressChanged;
             cancelSource = new CancellationTokenSource();
-            tbXmlPath.Text = _myiTunes.LibraryXMLPath;
+            _xmlPath = _myiTunes.LibraryXMLPath;
         }
 
+        private int counter = 1;
         private void Progress_ProgressChanged(object sender, double e)
         {
+            if (ProgressBar.Value > e)
+                counter += 1;
+
             ProgressBar.Value = e;
-            tbCounter.Text = e.ToString();
+            tbCounter.Text = $"Schritt {counter} | {Math.Round(e, 2)}";
         }
 
         #region new buttons
-        private async void btnReadXml_Click(object sender, RoutedEventArgs e)
+        private async void ReadRating(object sender, RoutedEventArgs e)
         {
 
             EnableButtons(false);
-            _sourceSonglistFull = XmlHandler.LoadItunesXML(tbXmlPath.Text);
+            _sourceSonglistFull = XmlHandler.LoadItunesXML(_xmlPath);
 
             if ((bool)CbFastMode.IsChecked)
             {
                 if ((bool)RbFile.IsChecked)
                 {
-                    _sourceSonglistFull = await Helper.GetFileRating(_sourceSonglistFull, cancelSource.Token, progress);
+                    _sourceSonglistFull = await RatingConnector.GetFilesRating(_sourceSonglistFull, cancelSource.Token, progress);
                     _sourceSonglistLight = await Helper.FilterDifferenzes(_sourceSonglistFull, cancelSource.Token, progress);
-                    _sourceSonglistLight = await Helper.ItunesRatingGet(_sourceSonglistLight, _myiTunes, cancelSource.Token, progress);
+                    _sourceSonglistLight = await RatingConnector.ItunesRatingGet(_sourceSonglistLight, _myiTunes, cancelSource.Token, progress);
                 }
 
                 if ((bool)RbItunes.IsChecked)
                 {
-                    _sourceSonglistFull = await Helper.ItunesRatingGet(_sourceSonglistFull, _myiTunes, cancelSource.Token, progress);
+                    _sourceSonglistFull = await RatingConnector.ItunesRatingGet(_sourceSonglistFull, _myiTunes, cancelSource.Token, progress);
                     _sourceSonglistLight = await Helper.FilterDifferenzes(_sourceSonglistFull, cancelSource.Token, progress);
-                    _sourceSonglistLight = await Helper.GetFileRating(_sourceSonglistLight, cancelSource.Token, progress);
+                    _sourceSonglistLight = await RatingConnector.GetFilesRating(_sourceSonglistLight, cancelSource.Token, progress);
                 }
 
                 _sourceSonglistLight = await Helper.FilterDifferenzes(_sourceSonglistLight, cancelSource.Token, progress);
@@ -65,42 +69,38 @@ namespace MusicRaitingSync
             }
             else
             {
-                _sourceSonglistFull = await Helper.ItunesRatingGet(_sourceSonglistFull, _myiTunes, cancelSource.Token, progress);
-                _sourceSonglistFull = await Helper.GetFileRating(_sourceSonglistFull, cancelSource.Token, progress);
+                _sourceSonglistFull = await RatingConnector.ItunesRatingGet(_sourceSonglistFull, _myiTunes, cancelSource.Token, progress);
+                _sourceSonglistFull = await RatingConnector.GetFilesRating(_sourceSonglistFull, cancelSource.Token, progress);
                 _sourceSonglistLight = await Helper.FilterDifferenzes(_sourceSonglistFull, cancelSource.Token, progress);
             }
 
             EnableButtons(true);
         }
 
-
-        private async void btnCompareiTunes2File_Click(object sender, RoutedEventArgs e)
+        private void btnToFile_Click(object sender, RoutedEventArgs e)
         {
-            EnableButtons(false);
-            _sourceSonglistFull = _sourceSonglistLight = await Helper.FilterDifferenzes(_sourceSonglistFull, cancelSource.Token, progress);
-            EnableButtons(true);
+            WriteRating(false);
         }
 
-        private async void btnToFile_Click(object sender, RoutedEventArgs e)
+        private void btnToItunes_Click(object sender, RoutedEventArgs e)
+        {
+            WriteRating(true);
+        }
+
+        private async void WriteRating(bool ToiTunes)
         {
             EnableButtons(false);
-            _sourceSonglistFull = await Helper.SetFileRating(dgVisible.DataContext as Dictionary<int, SongStruct> , cancelSource.Token, progress);
+
+            if (ToiTunes)
+                _sourceSonglistFull = await RatingConnector.ItunesRatingSet(dgVisible.DataContext as Dictionary<int, SongStructS>, _myiTunes, cancelSource.Token, progress);
+            else
+                _sourceSonglistFull = await RatingConnector.SetFilesRating(dgVisible.DataContext as Dictionary<int, SongStructS>, cancelSource.Token, progress);
+
             _sourceSonglistLight = await Helper.FilterDifferenzes(_sourceSonglistFull, cancelSource.Token, progress);
             CbFilter.IsChecked = true;
             EnableButtons(true);
         }
-
-        private async void btnToItunes_Click(object sender, RoutedEventArgs e)
-        {
-            EnableButtons(false);
-            _sourceSonglistFull = await Helper.ItunesRatingSet(dgVisible.DataContext as Dictionary<int, SongStruct> , _myiTunes, cancelSource.Token, progress);
-            _sourceSonglistLight = await Helper.FilterDifferenzes(_sourceSonglistFull, cancelSource.Token, progress);
-            CbFilter.IsChecked = true;
-            EnableButtons(true);
-        }
-
-
-
+               
         private void btnCancel_Click(object sender, RoutedEventArgs e)
         {
             btnCancel.IsEnabled = false;
@@ -115,45 +115,34 @@ namespace MusicRaitingSync
             {
                 UpdateView();
             }
+
             btnCancel.IsEnabled = !value;
-            btnToFile.IsEnabled = value;
-            btnToItunes.IsEnabled = value;
+            btnToFile.IsEnabled = btnToItunes.IsEnabled = value && !(CbFastMode.IsChecked ?? false);
+            btnWriteRating.IsEnabled = value && (CbFastMode.IsChecked ?? false);
+            CbFastMode.IsEnabled = value;
+            RbFile.IsEnabled = RbItunes.IsEnabled = value;
             btnReadXml.IsEnabled = value;
-            ProgressBar.Value = 0;
-
+            //ProgressBar.Value = 1;
+            Progress_ProgressChanged(new object(), 1.0);
         }
 
-        private void btnSelectFile_Click(object sender, RoutedEventArgs e)
-        {
-            // Displays an OpenFileDialog so the user can select a Cursor.  
-            System.Windows.Forms.OpenFileDialog openFileDialog1 = new System.Windows.Forms.OpenFileDialog();
-            openFileDialog1.Filter = "Cursor Files|*.xml";
-            openFileDialog1.Title = "Select a iTunes File";
-
-            // Show the Dialog.  
-            // If the user clicked OK in the dialog and  
-            // a .CUR file was selected, open it.  
-            if (openFileDialog1.ShowDialog() == System.Windows.Forms.DialogResult.OK)
-            {
-                // Assign the cursor in the Stream to the Form's Cursor property.  
-                tbXmlPath.Text = openFileDialog1.FileName;
-            }
-        }
-
-        private void CheckBox_Checked(object sender, RoutedEventArgs e)
+        private void CbFastMode_Checked(object sender, RoutedEventArgs e)
         {
             try
             {
-                RbFile.IsEnabled = RbItunes.IsEnabled = CbFastMode.IsChecked ?? false;
-                CbFilter.IsChecked = CbFilter.IsEnabled = CbFastMode.IsChecked ?? false;
+                bool FastModeEnabled = CbFastMode.IsChecked ?? false;
+                RbFile.IsEnabled = RbItunes.IsEnabled = FastModeEnabled;
+
+                btnWriteRating.IsEnabled = FastModeEnabled;
+                btnToItunes.IsEnabled = btnToFile.IsEnabled = !FastModeEnabled;
             }
             catch (Exception)
             { }
         }
 
-        private void tbCounter_TextChanged(object sender, TextChangedEventArgs e)
+        private void CbFilter_Checked(object sender, RoutedEventArgs e)
         {
-
+            UpdateView();
         }
 
         private void UpdateView()
@@ -162,11 +151,6 @@ namespace MusicRaitingSync
                 dgVisible.DataContext = _sourceSonglistLight;
             else
                 dgVisible.DataContext = _sourceSonglistFull;
-        }
-
-        private void CheckBox_Checked_1(object sender, RoutedEventArgs e)
-        {
-            UpdateView();
         }
     }
 }

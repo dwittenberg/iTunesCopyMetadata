@@ -8,21 +8,21 @@ namespace MusicRaitingSync
 {
     static class XmlHandler
     {
-        public static Dictionary<int, SongStruct>  LoadItunesXML(string filePath)
+        public static Dictionary<int, SongStructS>  LoadItunesXML(string filePath)
         {
             if (!File.Exists(filePath))
             {
                 MessageBox.Show("invalid filepath: '" + filePath + "'");
-                return new Dictionary<int, SongStruct> ();
+                return new Dictionary<int, SongStructS> ();
             }
 
-            Dictionary<int, SongStruct> bibliotek = new Dictionary<int, SongStruct> ();
+            Dictionary<int, SongStructS> bibliotek = new Dictionary<int, SongStructS> ();
             NSDictionary tracks = (XmlPropertyListParser.Parse(new FileInfo(filePath)) as NSDictionary)["Tracks"] as NSDictionary;
 
             foreach (var entry in tracks)
             {
                 NSDictionary track = (NSDictionary)entry.Value;
-                SongStruct musicFile = new SongStruct();
+                SongStructS musicFile = new SongStructS();
                 int id = 0;
 
                 // Get importend informations
@@ -72,8 +72,8 @@ namespace MusicRaitingSync
                 { musicFile.PlayCount = int.Parse(track["Play Count"].ToString()); }
 
                 //// bool
-                //if (track.ContainsKey("Rating Computed"))
-                //{ musicFile.RatingComputed = (track["Rating Computed"].ToString() == "true") ? true : false; }
+                if (track.ContainsKey("Rating Computed"))
+                { musicFile.RatingComputed = (track["Rating Computed"].ToString().ToLower() == "true") ? true : false; }
 
                 // ToDo: TryCatch ??
 

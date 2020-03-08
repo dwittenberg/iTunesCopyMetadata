@@ -13,7 +13,7 @@ namespace MusicRaitingSync
     /// </summary>
     public partial class MainWindow : Window
     {
-        private Dictionary<int, SongStruct>  _sourceSonglist;
+        private Dictionary<int, SongStructS>  _sourceSonglist;
 
         private readonly iTunesAppClass _myiTunes = new iTunesAppClass();
         private CancellationTokenSource cancelSource;
@@ -27,7 +27,7 @@ namespace MusicRaitingSync
             progress = new Progress<double>();
             progress.ProgressChanged += Progress_ProgressChanged;
             cancelSource = new CancellationTokenSource();
-            _sourceSonglist = new Dictionary<int, SongStruct> 
+            _sourceSonglist = new Dictionary<int, SongStructS> 
             {
                 //new SongStruct { Name = "hh" },
                 //new SongStruct { Name = "ha" },
@@ -36,6 +36,8 @@ namespace MusicRaitingSync
                 //new SongStruct { Name = "hhg"},
             };
             dgVisible.DataContext = _sourceSonglist;
+
+     
         }
 
         private void Progress_ProgressChanged(object sender, double e)
@@ -57,14 +59,14 @@ namespace MusicRaitingSync
         private async void btnReadItunesRating_Click(object sender, RoutedEventArgs e)
         {
             EnableButtons(false);
-            dgVisible.DataContext = _sourceSonglist = await Helper.ItunesRatingSet(_sourceSonglist, _myiTunes, cancelSource.Token, progress);
+            dgVisible.DataContext = _sourceSonglist = await RatingConnector.ItunesRatingSet(_sourceSonglist, _myiTunes, cancelSource.Token, progress);
             EnableButtons(true);
         }
 
         private async void btnFileRating_Click(object sender, RoutedEventArgs e)
         {
             EnableButtons(false);
-            dgVisible.DataContext = _sourceSonglist = await Helper.GetFileRating(_sourceSonglist, cancelSource.Token, progress);
+            dgVisible.DataContext = _sourceSonglist = await RatingConnector.GetFilesRating(_sourceSonglist, cancelSource.Token, progress);
             EnableButtons(true);
         }
 
@@ -78,7 +80,7 @@ namespace MusicRaitingSync
         private async void btnToFile_Click(object sender, RoutedEventArgs e)
         {
             EnableButtons(false);
-            dgVisible.DataContext = _sourceSonglist = await Helper.SetFileRating(_sourceSonglist, cancelSource.Token, progress);
+            dgVisible.DataContext = _sourceSonglist = await RatingConnector.SetFilesRating(_sourceSonglist, cancelSource.Token, progress);
             EnableButtons(true);
         }
 

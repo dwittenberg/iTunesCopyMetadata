@@ -1,19 +1,23 @@
 ﻿
 namespace MusicRaitingSync
 {
-    public class SongStruct
+    public class SongStructS
     {
-        public SongStruct()
+        public SongStructS()
         {
             RatingComputed = false;
         }
 
         // All informations of xml, iTunes & file
         public string Name { get; set; }
+        public string FileName { get; set; }
+        public string Extention { get; set; }
+
         public string Artist { get; set; }
         public string AlbumArtist { get; set; }
         public string Album { get; set; }
         public string Genre { get; set; }
+        public string Comment { get; set; }
         public int ID { get; set; }
         public int TotalTime { get; set; }
         public int BitRate { get; set; }
@@ -37,6 +41,34 @@ namespace MusicRaitingSync
         public override string ToString()
         {
             return "song: " + Name;
+        }
+
+        public string RatingFileString
+        {
+            get
+            {
+                return RatingToString(RatingFile);
+            }
+        }
+
+        public string RatingiTunesString
+        {
+            get
+            {
+                return RatingToString(RatingiTunes);
+            }
+        }
+
+        private string RatingToString(int rating)
+        {
+            var result = "";
+
+            for (int i = 0; i < 5; i++)
+            {
+                result += (rating > i ? "★" : "☆");
+            }
+
+            return result;
         }
     }
 }
